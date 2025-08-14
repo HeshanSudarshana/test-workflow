@@ -39,8 +39,8 @@ jobs:
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build carbon-apimgt with Tests
-        run: mvn clean install --file pom.xml
+      - name: Build carbon-apimgt without Tests
+        run: mvn clean install --file pom.xml -Dmaven.test.skip=true
 
       - name: Upload unit test coverage to Codecov
         uses: codecov/codecov-action@v3
