@@ -2,11 +2,32 @@ name: API Manager Build with Test
 
 on:
   workflow_dispatch:
+    inputs:
+      product_apim_repo:
+        description: 'Product APIM Repository'
+        required: true
+        default: 'HeshanSudarshana/product-apim'
+        type: string
+      product_apim_branch:
+        description: 'Product APIM Branch'
+        required: true
+        default: 'master-4.6.0-bump-2-build'
+        type: string
+      carbon_apimgt_repo:
+        description: 'Carbon APIMGT Repository'
+        required: true
+        default: 'HeshanSudarshana/carbon-apimgt'
+        type: string
+      carbon_apimgt_branch:
+        description: 'Carbon APIMGT Branch'
+        required: true
+        default: 'master-bump-to-4.6.0-build'
+        type: string
 
 permissions:
   contents: read # to fetch code (actions/checkout)
 concurrency:
-  group: ${{ github.event.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.run_id }}
   cancel-in-progress: true
 jobs:
   build-carbon:
@@ -21,8 +42,8 @@ jobs:
       - name: Checkout carbon-apimgt master-bump-to-4.6.0-build branch
         uses: actions/checkout@v3
         with:
-          repository: HeshanSudarshana/carbon-apimgt
-          ref: refs/heads/master-bump-to-4.6.0-build
+          repository: ${{ inputs.carbon_apimgt_repo }}
+          ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
       - name: Set up JDK 11
         uses: actions/setup-java@v2
@@ -39,13 +60,8 @@ jobs:
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build carbon-apimgt without Tests
-        run: mvn clean install --file pom.xml -Dmaven.test.skip=true
-
-      - name: Upload unit test coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          flags: unit_tests
+      - name: Build carbon-apimgt with Tests
+        run: mvn clean install --file pom.xml
 
   build-product:
     runs-on: ubuntu-latest
@@ -71,8 +87,8 @@ jobs:
       - name: Checkout carbon-apimgt master-bump-to-4.6.0-build branch
         uses: actions/checkout@v3
         with:
-          repository: HeshanSudarshana/carbon-apimgt
-          ref: refs/heads/master-bump-to-4.6.0-build
+          repository: ${{ inputs.carbon_apimgt_repo }}
+          ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
       - name: Set up JDK 11
         uses: actions/setup-java@v2
@@ -98,8 +114,8 @@ jobs:
       - name: Checkout Product-APIM (forked)
         uses: actions/checkout@v3
         with:
-          repository: HeshanSudarshana/product-apim
-          ref: refs/heads/master-4.6.0-bump-2-build
+          repository: ${{ inputs.product_apim_repo }}
+          ref: refs/heads/${{ inputs.product_apim_branch }}
           fetch-depth: '10'
           path: product-apim
       - name: Build product-apim with tests
@@ -110,6 +126,7 @@ jobs:
         if: always()
         uses: malinthaprasan/action-surefire-report@v1
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: 'product-apim/all-in-one-apim/modules/integration/tests-integration/tests-backend/target/surefire-reports/TEST-TestSuite.xml'
       - name: Prepare upload testng report
         if: always()
@@ -122,10 +139,6 @@ jobs:
           path: |
             TEST-TestSuite_${{ matrix.id }}.xml
           if-no-files-found: warn
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          flags: integration_tests
   run-benchmark-test:
     runs-on: ubuntu-latest
     steps:
@@ -138,8 +151,8 @@ jobs:
       - name: Checkout carbon-apimgt master-bump-to-4.6.0-build branch
         uses: actions/checkout@v3
         with:
-          repository: HeshanSudarshana/carbon-apimgt
-          ref: refs/heads/master-bump-to-4.6.0-build
+          repository: ${{ inputs.carbon_apimgt_repo }}
+          ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
       - name: Set up JDK 11
         uses: actions/setup-java@v2
@@ -165,8 +178,8 @@ jobs:
       - name: Checkout Product-APIM (forked)
         uses: actions/checkout@v3
         with:
-          repository: HeshanSudarshana/product-apim
-          ref: refs/heads/master-4.6.0-bump-2-build
+          repository: ${{ inputs.product_apim_repo }}
+          ref: refs/heads/${{ inputs.product_apim_branch }}
           fetch-depth: '10'
           path: product-apim
       - name: Build product-apim with tests
