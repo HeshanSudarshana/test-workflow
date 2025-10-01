@@ -16,12 +16,10 @@ on:
       carbon_apimgt_repo:
         description: 'Carbon APIMGT Repository (optional - leave empty to skip carbon-apimgt build)'
         required: false
-        default: 'HeshanSudarshana/carbon-apimgt'
         type: string
       carbon_apimgt_branch:
         description: 'Carbon APIMGT Branch (optional - leave empty to skip carbon-apimgt build)'
         required: false
-        default: 'master-bump-to-4.6.0-build'
         type: string
 
 permissions:
