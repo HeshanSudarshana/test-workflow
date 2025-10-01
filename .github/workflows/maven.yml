@@ -14,13 +14,13 @@ on:
         default: 'master-4.6.0-bump-2-build'
         type: string
       carbon_apimgt_repo:
-        description: 'Carbon APIMGT Repository'
-        required: true
+        description: 'Carbon APIMGT Repository (optional - leave empty to skip carbon-apimgt build)'
+        required: false
         default: 'HeshanSudarshana/carbon-apimgt'
         type: string
       carbon_apimgt_branch:
-        description: 'Carbon APIMGT Branch'
-        required: true
+        description: 'Carbon APIMGT Branch (optional - leave empty to skip carbon-apimgt build)'
+        required: false
         default: 'master-bump-to-4.6.0-build'
         type: string
 
@@ -31,6 +31,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build-carbon:
+    if: ${{ inputs.carbon_apimgt_branch != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Run hostname
@@ -84,7 +85,8 @@ jobs:
         run: sudo echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
       - name: Show hosts
         run: cat /etc/hosts
-      - name: Checkout carbon-apimgt master-bump-to-4.6.0-build branch
+      - name: Checkout carbon-apimgt branch (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         uses: actions/checkout@v3
         with:
           repository: ${{ inputs.carbon_apimgt_repo }}
@@ -104,11 +106,14 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
-      - name: Build carbon-apimgt without tests, skip portal builds
+      - name: Build carbon-apimgt without tests, skip portal builds (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: mvn clean install --file pom.xml -Dmaven.test.skip=true -Dnpm.build.skip=true
-      - name: Get carbon.apimgt.version
+      - name: Get carbon.apimgt.version (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: mvn help:evaluate -Dexpression=project.version -q -DforceStdout > ../CARBON_APIMGT_VERSION_FILE
-      - name: Print carbon.apimgt.version
+      - name: Print carbon.apimgt.version (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: |
           echo $(cat ../CARBON_APIMGT_VERSION_FILE)
       - name: Checkout Product-APIM (forked)
@@ -119,7 +124,12 @@ jobs:
           fetch-depth: '10'
           path: product-apim
       - name: Build product-apim with tests
-        run: mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipBenchMarkTest=true -DskipRestartTests=true
+        run: |
+          if [ "${{ inputs.carbon_apimgt_branch }}" != "" ]; then
+            mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipBenchMarkTest=true -DskipRestartTests=true
+          else
+            mvn clean install -fae --file product-apim/all-in-one-apim/pom.xml -DskipBenchMarkTest=true -DskipRestartTests=true
+          fi
         env:
           PRODUCT_APIM_TEST_GROUPS: ${{ matrix.segment }}
       - name: Publish Test Report
@@ -148,7 +158,8 @@ jobs:
         run: sudo echo "127.0.0.1 $(hostname)" | sudo tee -a /etc/hosts
       - name: Show hosts
         run: cat /etc/hosts
-      - name: Checkout carbon-apimgt master-bump-to-4.6.0-build branch
+      - name: Checkout carbon-apimgt branch (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         uses: actions/checkout@v3
         with:
           repository: ${{ inputs.carbon_apimgt_repo }}
@@ -168,11 +179,14 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
-      - name: Build carbon-apimgt without tests, skip portal builds
+      - name: Build carbon-apimgt without tests, skip portal builds (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: mvn clean install --file pom.xml -Dmaven.test.skip=true -Dnpm.build.skip=true
-      - name: Get carbon.apimgt.version
+      - name: Get carbon.apimgt.version (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: mvn help:evaluate -Dexpression=project.version -q -DforceStdout > ../CARBON_APIMGT_VERSION_FILE
-      - name: Print carbon.apimgt.version
+      - name: Print carbon.apimgt.version (conditional)
+        if: ${{ inputs.carbon_apimgt_branch != '' }}
         run: |
           echo $(cat ../CARBON_APIMGT_VERSION_FILE)
       - name: Checkout Product-APIM (forked)
@@ -183,4 +197,9 @@ jobs:
           fetch-depth: '10'
           path: product-apim
       - name: Build product-apim with tests
-        run: mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests
+        run: |
+          if [ "${{ inputs.carbon_apimgt_branch }}" != "" ]; then
+            mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests
+          else
+            mvn clean install -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests
+          fi
