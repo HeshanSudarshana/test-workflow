@@ -44,10 +44,10 @@ jobs:
           repository: ${{ inputs.carbon_apimgt_repo }}
           ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
-          java-version: 11.0.24
+          java-version: 21
           distribution: 'temurin'
       - uses: actions/setup-node@v3
         with:
@@ -90,10 +90,10 @@ jobs:
           repository: ${{ inputs.carbon_apimgt_repo }}
           ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
-          java-version: 11.0.24
+          java-version: 21
           distribution: 'temurin'
       - uses: actions/setup-node@v3
         with:
@@ -163,10 +163,10 @@ jobs:
           repository: ${{ inputs.carbon_apimgt_repo }}
           ref: refs/heads/${{ inputs.carbon_apimgt_branch }}
           fetch-depth: '10'
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v2
         with:
-          java-version: 11.0.24
+          java-version: 21
           distribution: 'temurin'
       - uses: actions/setup-node@v3
         with:
@@ -197,7 +197,7 @@ jobs:
       - name: Build product-apim with tests
         run: |
           if [ "${{ inputs.carbon_apimgt_branch }}" != "" ]; then
-            mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests
+            mvn clean install -Dcarbon.apimgt.version=$(cat ../CARBON_APIMGT_VERSION_FILE) -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests=true
           else
-            mvn clean install -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests
+            mvn clean install -fae --file product-apim/all-in-one-apim/pom.xml -DskipIntegrationTests=true
           fi
